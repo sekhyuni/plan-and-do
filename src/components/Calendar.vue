@@ -5,24 +5,28 @@
             <div class="select-box">
                 <div class="select-box__current" tabindex="1">
                     <div class="select-box__value" v-for="(monthName, idx) in monthsName" :key="monthName.id">
-                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" v-if="monthName === 'January'" checked="checked" />
-                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" v-else/>
+                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" name="Month" v-if="monthName === 'January'" checked="checked" />
+                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" name="Month" v-else/>
+    
                         <p class="select-box__input-text">{{ monthName }}</p>
                     </div>
                     <img class="select-box__icon" src="http://cdn.onlinewebfonts.com/svg/img_295694.svg" alt="Arrow Icon" aria-hidden="true" />
                 </div>
-
+    
                 <ul class="select-box__list">
                     <li v-for="(monthName, idx) in monthsName" :key="monthName.id">
                         <label class="select-box__option" :for="idx" aria-hidden="aria-hidden">{{ monthName }}</label>
                     </li>
                 </ul>
             </div>
+
+            <br>
+
             <select>
                 <option v-for="year in years" :key="year.id">{{ year }}</option>
             </select>
         </div>
-
+    
         <!-- 달력 -->
         <div class="calendar">
             <span class="day-name" v-for="dayName in daysName" :key="dayName.id">{{ dayName }}</span>
