@@ -1,25 +1,34 @@
 <template>
-    <select>
-        <option v-for="year in years" :key="year.id">{{ year }}</option>
+    <select @change="yearChange">
+        <option v-for="yearOption in yearOptions" :key="yearOption.id" :selected="year === yearOption">{{ yearOption }}</option>
     </select>
 </template>
 
 <script>
 export default {
+    props: {
+        year: {
+            type: Number,
+            required: true,
+        }
+    },
     data() {
         return {
-            years: [],
+            yearOptions: [],
         }
     },
     methods: {
-        yearInit() {
+        yearOptionsInit() {
             for (let i = 2010; i <= 2030; i++) {
-                this.years.push(i)
+                this.yearOptions.push(i)
             }
+        },
+        yearChange(event) {
+            this.$emit('yearEmitted', Number(event.target.value))
         },
     },
     created() {
-        this.yearInit()
+        this.yearOptionsInit()
     },
 }
 </script>

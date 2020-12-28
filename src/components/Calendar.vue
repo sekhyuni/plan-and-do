@@ -1,21 +1,23 @@
 <template>
     <div class="calendar-container">
         <div class="calendar-header">
-            <!-- 월 선택 -->
-            <MonthSelect></MonthSelect>
-            <br>
             <!-- 년 선택 -->
-            <YearSelect></YearSelect>
+            <YearSelect :year="year" @yearEmitted="yearChanged"></YearSelect>
+    
+            <br>
+            <br>
+    
+            <!-- 월 선택 -->
+            <MonthSelect :month="month" @monthEmitted="monthChanged"></MonthSelect>
         </div>
     
         <!-- 달력 -->
         <div class="calendar">
             <span class="day-name" v-for="dayName in daysName" :key="dayName.id">{{ dayName }}</span>
-            <div class="day day--disabled">30</div>
-            <div class="day day--disabled">31</div>
+    
+            <div class="day day--disabled" v-for="lastMonthDay in lastMonthDays" :key="lastMonthDay.id">{{ lastMonthDay }}</div>
             <div class="day" v-for="day in days" :key="day.id">{{ day }}</div>
-            <div class="day day--disabled">1</div>
-            <div class="day day--disabled">2</div>
+            <div class="day day--disabled" v-for="nextMonthDay in nextMonthDays" :key="nextMonthDay.id">{{ nextMonthDay }}</div>
         </div>
     </div>
 </template>
@@ -28,29 +30,43 @@ export default {
     components: { MonthSelect, YearSelect },
     data() {
         return {
-            days: [],
-            daysName: [],
+            month: 2, // server data로 update 해야 함
+            year: 2019, // server data로 update 해야 함
+            days: null,
+            daysName: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            daysOfMonth: [undefined, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            lastMonthDays: [],
+            nextMonthDays: [],
         }
     },
     methods: {
-        dateInit() {
-            const week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-         
-            for (let i = 1; i <= 31; i++) {
+        dayInit() {
+            this.days = []
+
+            // 윤년 계산
+            this.daysOfMonth[2] = this.year % 4 === 0 ? 29 : 28
+
+            for (let i = 1; i <= this.daysOfMonth[this.month]; i++) {
                 this.days.push(i)
             }
-            for (let i = 0, len = week.length; i < len; i++) {
-                this.daysName.push(week[i])
-            }
         },
+        monthChanged(month) {
+            this.month = month
+            this.dayInit()
+        },
+        yearChanged(year) {
+            this.year = year
+            this.dayInit()
+        }
     },
     created() {
-        this.dateInit()
+        this.dayInit()
     },
 }
 </script>
 
 <style lang="scss" scoped>
+$weekend-color: red;
 html,
 body {
     width: 100%;
