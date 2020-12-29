@@ -1,80 +1,117 @@
 <template>
     <div class="calendar-container">
         <div class="calendar-header">
-            <!-- 월 선택 -->
-            <div class="select-box">
-                <div class="select-box__current" tabindex="1">
-                    <div class="select-box__value" v-for="(monthName, idx) in monthsName" :key="monthName.id">
-                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" name="Month" v-if="monthName === 'January'" checked="checked" />
-                        <input class="select-box__input" type="radio" :id="idx" :value="idx + 1" name="Month" v-else/>
+            <!-- 년 선택 -->
+            <YearSelect :year="year" @yearEmitted="yearChanged"></YearSelect>
     
-                        <p class="select-box__input-text">{{ monthName }}</p>
-                    </div>
-                    <img class="select-box__icon" src="http://cdn.onlinewebfonts.com/svg/img_295694.svg" alt="Arrow Icon" aria-hidden="true" />
-                </div>
-    
-                <ul class="select-box__list">
-                    <li v-for="(monthName, idx) in monthsName" :key="monthName.id">
-                        <label class="select-box__option" :for="idx" aria-hidden="aria-hidden">{{ monthName }}</label>
-                    </li>
-                </ul>
-            </div>
-
             <br>
-
-            <select>
-                <option v-for="year in years" :key="year.id">{{ year }}</option>
-            </select>
+            <br>
+    
+            <!-- 월 선택 -->
+            <MonthSelect :month="month" @monthEmitted="monthChanged"></MonthSelect>
         </div>
     
         <!-- 달력 -->
         <div class="calendar">
             <span class="day-name" v-for="dayName in daysName" :key="dayName.id">{{ dayName }}</span>
-            <div class="day day--disabled">30</div>
-            <div class="day day--disabled">31</div>
+    
+            <div class="day day--disabled" v-for="lastMonthDay in lastMonthDays" :key="lastMonthDay.id">{{ lastMonthDay }}</div>
             <div class="day" v-for="day in days" :key="day.id">{{ day }}</div>
-            <div class="day day--disabled">1</div>
-            <div class="day day--disabled">2</div>
+            <div class="day day--disabled" v-for="nextMonthDay in nextMonthDays" :key="nextMonthDay.id">{{ nextMonthDay }}</div>
         </div>
     </div>
 </template>
 
 <script>
+import MonthSelect from './MonthSelect'
+import YearSelect from './YearSelect'
+
 export default {
+    components: { MonthSelect, YearSelect },
     data() {
         return {
-            days: [],
-            daysName: [],
-            monthsName: [],
-            years: [],
+            month: 8, // server data로 update 해야 함
+            year: 2013, // server data로 update 해야 함
+            days: null,
+            daysName: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            daysOfMonth: [undefined, 31, undefined, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            lastMonthDays: null,
+            nextMonthDays: null,
         }
     },
     methods: {
-        dateInit() {
-            const week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-            const month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        dayInit() {
+            this.days = []
 
-            for (let i = 1; i <= 31; i++) {
+            this.daysOfMonth[2] = this.year % 4 === 0 ? 29 : 28
+
+            for (let i = 1; i <= this.daysOfMonth[this.month]; i++) {
                 this.days.push(i)
             }
-            for (let i = 0, len = week.length; i < len; i++) {
-                this.daysName.push(week[i])
+        },
+        computeMonthFirstDay(month, year) {
+            const firstYear = 2010;
+            let sumOfDays = 0
+
+            for (let i = 1, len = year - firstYear; i <= len; i++) {
+                sumOfDays += (2010 + i - 1) % 4 === 0 ? 366 : 365
             }
-            for (let i = 2010; i <= 2030; i++) {
-                this.years.push(i)
+
+            for (let i = 1, len = month; i < len; i++) {
+                sumOfDays += this.daysOfMonth[i]
             }
-            for (let i = 0, len = month.length; i < len; i++) {
-                this.monthsName.push(month[i])
+
+            return (sumOfDays + 4) % 7 // 0 -> Mon, 1 -> Tue, 2 -> Wed, ...
+        },
+        insertLastMonthDays() {
+            const lastMonthLastDay = this.month === 1 ? this.daysOfMonth[12] : this.daysOfMonth[this.month - 1]
+            const lastMonthDayLen = this.computeMonthFirstDay(this.month, this.year)
+
+            this.lastMonthDays = []
+
+            for (let i = lastMonthLastDay - lastMonthDayLen + 1; i <= lastMonthLastDay; i++) {
+                this.lastMonthDays.push(i)
             }
+        },
+        insertNextMonthDays() {
+            const nextMonth = this.month === 12 ? 1 : this.month + 1
+            let nextMonthDayLen = this.computeMonthFirstDay(nextMonth, nextMonth === 1 ? this.year + 1 : this.year)
+
+            if (nextMonthDayLen === 0) { // 다음 달 시작이 월요일일경우 이번 달 마지막 row에 다음 달 표시하지 않음
+                nextMonthDayLen = 7;
+            }
+
+            this.nextMonthDays = []
+
+            for (let i = 1; i <= 7 - nextMonthDayLen; i++) {
+                this.nextMonthDays.push(i)
+            }
+        },
+        monthChanged(month) {
+            this.month = month
+
+            this.dayInit()
+            this.insertLastMonthDays()
+            this.insertNextMonthDays()
+        },
+        yearChanged(year) {
+            this.year = year
+
+            this.dayInit()
+            this.insertLastMonthDays()
+            this.insertNextMonthDays()
         },
     },
     created() {
-        this.dateInit()
+        this.dayInit()
+        this.insertLastMonthDays()
+        this.insertNextMonthDays()
     },
 }
 </script>
 
 <style lang="scss" scoped>
+$weekend-color: red;
 html,
 body {
     width: 100%;
@@ -288,103 +325,6 @@ body {
             font-weight: 500;
             color: rgba(#51565d, .7);
         }
-    }
-}
-
-.select-box {
-    position: relative;
-    display: block;
-    width: 100%;
-    margin: 0 auto;
-    font-family: 'Open Sans', 'Helvetica Neue', 'Segoe UI', 'Calibri', 'Arial', sans-serif;
-    font-size: 18px;
-    color: #60666d;
-    @media (min-width: 768px) {
-        width: 70%;
-    }
-    @media (min-width: 992px) {
-        width: 50%;
-    }
-    @media (min-width: 1200px) {
-        width: 30%;
-    }
-    &__current {
-        position: relative;
-        box-shadow: 0 15px 30px -10px transparentize(#000, 0.9);
-        cursor: pointer;
-        outline: none;
-        &:focus {
-            &+.select-box__list {
-                opacity: 1; // We have to set "animation-name: none;" to make the list visible (read below how it works)
-                animation-name: none;
-                .select-box__option {
-                    cursor: pointer;
-                }
-            }
-            .select-box__icon {
-                transform: translateY(-50%) rotate(180deg);
-            }
-        }
-    }
-    &__icon {
-        position: absolute;
-        top: 50%;
-        right: 15px;
-        transform: translateY(-50%);
-        width: 20px;
-        opacity: 0.3;
-        transition: 0.2s ease;
-    }
-    &__value {
-        display: flex;
-    }
-    &__input {
-        display: none;
-        &:checked+.select-box__input-text {
-            display: block;
-        }
-    }
-    &__input-text {
-        display: none;
-        width: 100%;
-        margin: 0;
-        padding: 15px;
-        background-color: #fff;
-    }
-    &__list {
-        position: absolute;
-        width: 100%;
-        padding: 0;
-        list-style: none;
-        opacity: 0; // We need to use animation with delay.
-        // Otherwise the click event will not have time to run on label, because this element disapears immediately when .select-box__current element loses the focus.
-        // This delay will not be noticed because we set "opacity" to "0".
-        // We also use "animation-fill-mode: forwards" to make the list stay hidden.
-        animation-name: HideList;
-        animation-duration: 0.5s;
-        animation-delay: 0.5s;
-        animation-fill-mode: forwards;
-        animation-timing-function: step-start;
-        box-shadow: 0 15px 30px -10px transparentize(#000, 0.9);
-    }
-    &__option {
-        display: block;
-        padding: 15px;
-        background-color: #fff;
-        &:hover,
-        &:focus {
-            color: #546c84;
-            background-color: #fbfbfb;
-        }
-    }
-}
-
-@keyframes HideList {
-    from {
-        transform: scaleY(1);
-    }
-    to {
-        transform: scaleY(0);
     }
 }
 </style>
