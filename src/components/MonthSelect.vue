@@ -67,8 +67,7 @@ body {
     margin: 0 auto;
     font-family: 'Open Sans', 'Helvetica Neue', 'Segoe UI', 'Calibri', 'Arial', sans-serif;
     font-size: 18px;
-    color: #60666d;
-    // @media (min-width: 768px) {
+    color: #60666d; // @media (min-width: 768px) {
     //     width: 20%;
     // }
     // @media (min-width: 992px) {
@@ -145,6 +144,8 @@ body {
             color: #546c84;
             background-color: #fbfbfb;
         }
+        z-index: 2; // day--disabled보다 앞에 나오도록
+        position: relative;
     }
 }
 
