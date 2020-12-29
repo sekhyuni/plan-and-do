@@ -30,37 +30,82 @@ export default {
     components: { MonthSelect, YearSelect },
     data() {
         return {
-            month: 2, // server data로 update 해야 함
-            year: 2019, // server data로 update 해야 함
+            month: 8, // server data로 update 해야 함
+            year: 2013, // server data로 update 해야 함
             days: null,
             daysName: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            daysOfMonth: [undefined, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-            lastMonthDays: [],
-            nextMonthDays: [],
+            daysOfMonth: [undefined, 31, undefined, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            lastMonthDays: null,
+            nextMonthDays: null,
         }
     },
     methods: {
         dayInit() {
             this.days = []
 
-            // 윤년 계산
             this.daysOfMonth[2] = this.year % 4 === 0 ? 29 : 28
 
             for (let i = 1; i <= this.daysOfMonth[this.month]; i++) {
                 this.days.push(i)
             }
         },
+        computeMonthFirstDay(month, year) {
+            const firstYear = 2010;
+            let sumOfDays = 0
+
+            for (let i = 1, len = year - firstYear; i <= len; i++) {
+                sumOfDays += (2010 + i - 1) % 4 === 0 ? 366 : 365
+            }
+
+            for (let i = 1, len = month; i < len; i++) {
+                sumOfDays += this.daysOfMonth[i]
+            }
+
+            return (sumOfDays + 4) % 7 // 0 -> Mon, 1 -> Tue, 2 -> Wed, ...
+        },
+        insertLastMonthDays() {
+            const lastMonthLastDay = this.month === 1 ? this.daysOfMonth[12] : this.daysOfMonth[this.month - 1]
+            const lastMonthDayLen = this.computeMonthFirstDay(this.month, this.year)
+
+            this.lastMonthDays = []
+
+            for (let i = lastMonthLastDay - lastMonthDayLen + 1; i <= lastMonthLastDay; i++) {
+                this.lastMonthDays.push(i)
+            }
+        },
+        insertNextMonthDays() {
+            const nextMonth = this.month === 12 ? 1 : this.month + 1
+            let nextMonthDayLen = this.computeMonthFirstDay(nextMonth, nextMonth === 1 ? this.year + 1 : this.year)
+
+            if (nextMonthDayLen === 0) { // 다음 달 시작이 월요일일경우 이번 달 마지막 row에 다음 달 표시하지 않음
+                nextMonthDayLen = 7;
+            }
+
+            this.nextMonthDays = []
+
+            for (let i = 1; i <= 7 - nextMonthDayLen; i++) {
+                this.nextMonthDays.push(i)
+            }
+        },
         monthChanged(month) {
             this.month = month
+
             this.dayInit()
+            this.insertLastMonthDays()
+            this.insertNextMonthDays()
         },
         yearChanged(year) {
             this.year = year
+
             this.dayInit()
-        }
+            this.insertLastMonthDays()
+            this.insertNextMonthDays()
+        },
     },
     created() {
         this.dayInit()
+        this.insertLastMonthDays()
+        this.insertNextMonthDays()
     },
 }
 </script>
