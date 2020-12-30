@@ -111,7 +111,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$weekend-color: red;
+$weekend-color: rgba(#f00, .5);
+$weekend-background-color: rgba(#f00, .07);
+@mixin weekend {
+    color: $weekend-color;
+    background-color: $weekend-background-color;
+}
+
 html,
 body {
     width: 100%;
@@ -132,14 +138,13 @@ body {
     grid-template-columns: repeat(7, minmax(120px, 1fr));
     grid-template-rows: 50px;
     grid-auto-rows: 120px;
-    overflow: auto;
+    overflow: auto; // background: darken(#fff, 4%); // => 휘도 낮춤;
     &-container {
         width: 90%;
         margin: auto;
         overflow: hidden;
         box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         border-radius: 10px;
-        background: #fff;
         max-width: 1200px;
     }
     &-header {
@@ -180,6 +185,7 @@ body {
     position: relative;
     pointer-events: none;
     z-index: 1;
+    background: darken(#fff, 4%);
     &:nth-of-type(7n + 7) {
         border-right: 0;
     }
@@ -215,22 +221,31 @@ body {
     }
     &:nth-of-type(7n + 6) {
         grid-column: 6/6;
+        @include weekend;
     }
     &:nth-of-type(7n + 7) {
         grid-column: 7/7;
+        @include weekend;
     }
     &-name {
-        font-size: 12px;
+        font-size: 15px;
         text-transform: uppercase;
         color: #99a1a7;
         text-align: center;
         border-bottom: 1px solid rgba(166, 168, 179, 0.12);
+        border-right: 1px solid rgba(166, 168, 179, 0.12);
         line-height: 50px;
         font-weight: 500;
+        background: darken(#fff, 8%);
+        &:nth-of-type(7n + 6) {
+            color: $weekend-color;
+        }
+        &:nth-of-type(7n + 7) {
+            color: $weekend-color;
+        }
     }
     &--disabled {
         color: rgba(#98a0a6, 0.6);
-        background-color: #ffffff;
         background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f9f9fa' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
         cursor: not-allowed;
     }
